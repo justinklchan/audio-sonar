@@ -1140,11 +1140,11 @@ class App(tk.Tk):
             ha="center", va="bottom", color="#585b70", fontsize=9,
         )
 
-        # Arrow key bindings
-        self.bind("<Up>", lambda e: setattr(self, '_pac_desired_dir', 'up'))
-        self.bind("<Down>", lambda e: setattr(self, '_pac_desired_dir', 'down'))
-        self.bind("<Left>", lambda e: setattr(self, '_pac_desired_dir', 'left'))
-        self.bind("<Right>", lambda e: setattr(self, '_pac_desired_dir', 'right'))
+        # Arrow key bindings (bind_all so they work even when canvas has focus)
+        self.bind_all("<Up>", lambda e: setattr(self, '_pac_desired_dir', 'up'))
+        self.bind_all("<Down>", lambda e: setattr(self, '_pac_desired_dir', 'down'))
+        self.bind_all("<Left>", lambda e: setattr(self, '_pac_desired_dir', 'left'))
+        self.bind_all("<Right>", lambda e: setattr(self, '_pac_desired_dir', 'right'))
 
     def _reset_pacman_maze(self):
         """Repopulate dots after all are eaten."""
@@ -1314,11 +1314,11 @@ class App(tk.Tk):
         self._tron_death_timer = -1
         self._tron_death_delay = 60  # frames before auto-restart
 
-        # Arrow key bindings
-        self.bind("<Up>", lambda e: setattr(self, '_tron_desired_dir', 'up'))
-        self.bind("<Down>", lambda e: setattr(self, '_tron_desired_dir', 'down'))
-        self.bind("<Left>", lambda e: setattr(self, '_tron_desired_dir', 'left'))
-        self.bind("<Right>", lambda e: setattr(self, '_tron_desired_dir', 'right'))
+        # Arrow key bindings (bind_all so they work even when canvas has focus)
+        self.bind_all("<Up>", lambda e: setattr(self, '_tron_desired_dir', 'up'))
+        self.bind_all("<Down>", lambda e: setattr(self, '_tron_desired_dir', 'down'))
+        self.bind_all("<Left>", lambda e: setattr(self, '_tron_desired_dir', 'left'))
+        self.bind_all("<Right>", lambda e: setattr(self, '_tron_desired_dir', 'right'))
 
     def _tron_add_trail(self, row, col):
         """Add a trail rectangle at the given grid cell."""
@@ -1538,11 +1538,11 @@ class App(tk.Tk):
             ha="center", va="bottom", color="#585b70", fontsize=9,
         )
 
-        # Arrow key bindings
-        self.bind("<Up>", lambda e: setattr(self, '_maze_desired_dir', 'up'))
-        self.bind("<Down>", lambda e: setattr(self, '_maze_desired_dir', 'down'))
-        self.bind("<Left>", lambda e: setattr(self, '_maze_desired_dir', 'left'))
-        self.bind("<Right>", lambda e: setattr(self, '_maze_desired_dir', 'right'))
+        # Arrow key bindings (bind_all so they work even when canvas has focus)
+        self.bind_all("<Up>", lambda e: setattr(self, '_maze_desired_dir', 'up'))
+        self.bind_all("<Down>", lambda e: setattr(self, '_maze_desired_dir', 'down'))
+        self.bind_all("<Left>", lambda e: setattr(self, '_maze_desired_dir', 'left'))
+        self.bind_all("<Right>", lambda e: setattr(self, '_maze_desired_dir', 'right'))
 
     def _maze_draw_walls(self):
         """Draw wall rectangles for the current maze."""
@@ -1789,15 +1789,15 @@ class App(tk.Tk):
         self._world_move_timer = 0
         self._world_move_interval = 4
 
-        # Arrow key bindings
-        self.bind("<Up>",
-                  lambda e: setattr(self, '_world_desired_dir', 'up'))
-        self.bind("<Down>",
-                  lambda e: setattr(self, '_world_desired_dir', 'down'))
-        self.bind("<Left>",
-                  lambda e: setattr(self, '_world_desired_dir', 'left'))
-        self.bind("<Right>",
-                  lambda e: setattr(self, '_world_desired_dir', 'right'))
+        # Arrow key bindings (bind_all so they work even when canvas has focus)
+        self.bind_all("<Up>",
+                      lambda e: setattr(self, '_world_desired_dir', 'up'))
+        self.bind_all("<Down>",
+                      lambda e: setattr(self, '_world_desired_dir', 'down'))
+        self.bind_all("<Left>",
+                      lambda e: setattr(self, '_world_desired_dir', 'left'))
+        self.bind_all("<Right>",
+                      lambda e: setattr(self, '_world_desired_dir', 'right'))
 
     def _world_get_viewport(self):
         """Extract the visible viewport as an RGB array."""
@@ -2176,9 +2176,20 @@ class App(tk.Tk):
 
 if __name__ == "__main__":
     import argparse
+
+    GAMES = ["pong", "pacman", "tron", "maze", "world"]
+
     parser = argparse.ArgumentParser(description="Tone Generator & FFT Spectrum Analyzer")
-    parser.add_argument("--game", choices=["pong", "pacman", "tron", "maze", "world"], default=None,
+    parser.add_argument("--game", choices=GAMES, default=None,
                         help="Enable a game panel (e.g. --game pong)")
     args = parser.parse_args()
+
+    print("Tone Generator & FFT Spectrum Analyzer")
+    print(f"Available games: {', '.join(GAMES)}")
+    print(f"  usage: {parser.prog} --game <name>")
+    if args.game:
+        print(f"  starting with: {args.game}")
+    print()
+
     app = App(game=args.game)
     app.mainloop()
