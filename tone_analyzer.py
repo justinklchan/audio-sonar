@@ -276,6 +276,11 @@ class App(tk.Tk):
         self._build_controls()
         self._build_plot()
 
+        # Keyboard input tracking -- arrow keys get priority over classifier
+        self._key_input_frame = -999  # frame counter when last key was pressed
+        self._frame_counter = 0
+        self._KEY_HOLD_FRAMES = 30   # keyboard priority lasts ~0.5s at 60fps
+
         # Start the mic stream and kick off the update loop
         self._closing = False
         self._after_id = None
@@ -283,6 +288,15 @@ class App(tk.Tk):
         self._update_plot()
         self.bind("<space>", lambda e: self._toggle_tone())
         self._toggle_tone()  # Start playing immediately
+
+    def _key_set_dir(self, attr, direction):
+        """Set a direction attribute and mark keyboard as active."""
+        setattr(self, attr, direction)
+        self._key_input_frame = self._frame_counter
+
+    def _keyboard_active(self):
+        """Return True if a key was pressed recently."""
+        return (self._frame_counter - self._key_input_frame) < self._KEY_HOLD_FRAMES
 
     @staticmethod
     def _scale_click_jump(event):
@@ -1141,10 +1155,10 @@ class App(tk.Tk):
         )
 
         # Arrow key bindings (bind_all so they work even when canvas has focus)
-        self.bind_all("<Up>", lambda e: setattr(self, '_pac_desired_dir', 'up'))
-        self.bind_all("<Down>", lambda e: setattr(self, '_pac_desired_dir', 'down'))
-        self.bind_all("<Left>", lambda e: setattr(self, '_pac_desired_dir', 'left'))
-        self.bind_all("<Right>", lambda e: setattr(self, '_pac_desired_dir', 'right'))
+        self.bind_all("<Up>", lambda e: self._key_set_dir('_pac_desired_dir', 'up'))
+        self.bind_all("<Down>", lambda e: self._key_set_dir('_pac_desired_dir', 'down'))
+        self.bind_all("<Left>", lambda e: self._key_set_dir('_pac_desired_dir', 'left'))
+        self.bind_all("<Right>", lambda e: self._key_set_dir('_pac_desired_dir', 'right'))
 
     def _reset_pacman_maze(self):
         """Repopulate dots after all are eaten."""
@@ -1171,13 +1185,13 @@ class App(tk.Tk):
 
     def _update_pacman(self):
         """Step the Pacman simulation once per frame."""
-        # Map classifier labels to directions
+        # Map classifier labels to directions (keyboard takes priority)
         label = self._clf_stable_label
         label_map = {
             "left": "left", "right": "right",
             "top": "up", "bottom": "down",
         }
-        if label in label_map:
+        if not self._keyboard_active() and label in label_map:
             self._pac_desired_dir = label_map[label]
 
         # Movement tick
@@ -1221,7 +1235,10 @@ class App(tk.Tk):
         self._pac_score_text.set_text(f"Score: {self._pac_score}")
 
         # Update label indicator
-        if label in label_map:
+        if self._keyboard_active():
+            self._pac_label_text.set_text(self._pac_desired_dir)
+            self._pac_label_text.set_color("#f9e2af")
+        elif label in label_map:
             self._pac_label_text.set_text(label_map[label])
             self._pac_label_text.set_color("#a6e3a1")
         else:
@@ -1315,10 +1332,10 @@ class App(tk.Tk):
         self._tron_death_delay = 60  # frames before auto-restart
 
         # Arrow key bindings (bind_all so they work even when canvas has focus)
-        self.bind_all("<Up>", lambda e: setattr(self, '_tron_desired_dir', 'up'))
-        self.bind_all("<Down>", lambda e: setattr(self, '_tron_desired_dir', 'down'))
-        self.bind_all("<Left>", lambda e: setattr(self, '_tron_desired_dir', 'left'))
-        self.bind_all("<Right>", lambda e: setattr(self, '_tron_desired_dir', 'right'))
+        self.bind_all("<Up>", lambda e: self._key_set_dir('_tron_desired_dir', 'up'))
+        self.bind_all("<Down>", lambda e: self._key_set_dir('_tron_desired_dir', 'down'))
+        self.bind_all("<Left>", lambda e: self._key_set_dir('_tron_desired_dir', 'left'))
+        self.bind_all("<Right>", lambda e: self._key_set_dir('_tron_desired_dir', 'right'))
 
     def _tron_add_trail(self, row, col):
         """Add a trail rectangle at the given grid cell."""
@@ -1375,13 +1392,13 @@ class App(tk.Tk):
                 self._reset_tron()
             return
 
-        # Map classifier labels to directions
+        # Map classifier labels to directions (keyboard takes priority)
         label = self._clf_stable_label
         label_map = {
             "left": "left", "right": "right",
             "top": "up", "bottom": "down",
         }
-        if label in label_map:
+        if not self._keyboard_active() and label in label_map:
             self._tron_desired_dir = label_map[label]
 
         # Movement tick
@@ -1429,7 +1446,10 @@ class App(tk.Tk):
         self._tron_score_text.set_text(str(self._tron_score))
 
         # Update label indicator
-        if label in label_map:
+        if self._keyboard_active():
+            self._tron_label_text.set_text(self._tron_desired_dir)
+            self._tron_label_text.set_color("#f9e2af")
+        elif label in label_map:
             self._tron_label_text.set_text(label_map[label])
             self._tron_label_text.set_color("#66ffff")
         else:
@@ -1539,10 +1559,10 @@ class App(tk.Tk):
         )
 
         # Arrow key bindings (bind_all so they work even when canvas has focus)
-        self.bind_all("<Up>", lambda e: setattr(self, '_maze_desired_dir', 'up'))
-        self.bind_all("<Down>", lambda e: setattr(self, '_maze_desired_dir', 'down'))
-        self.bind_all("<Left>", lambda e: setattr(self, '_maze_desired_dir', 'left'))
-        self.bind_all("<Right>", lambda e: setattr(self, '_maze_desired_dir', 'right'))
+        self.bind_all("<Up>", lambda e: self._key_set_dir('_maze_desired_dir', 'up'))
+        self.bind_all("<Down>", lambda e: self._key_set_dir('_maze_desired_dir', 'down'))
+        self.bind_all("<Left>", lambda e: self._key_set_dir('_maze_desired_dir', 'left'))
+        self.bind_all("<Right>", lambda e: self._key_set_dir('_maze_desired_dir', 'right'))
 
     def _maze_draw_walls(self):
         """Draw wall rectangles for the current maze."""
@@ -1616,13 +1636,13 @@ class App(tk.Tk):
         """Step the maze explorer once per frame."""
         H, W = self._maze_grid.shape
 
-        # Map classifier labels to directions
+        # Map classifier labels to directions (keyboard takes priority)
         label = self._clf_stable_label
         label_map = {
             "left": "left", "right": "right",
             "top": "up", "bottom": "down",
         }
-        if label in label_map:
+        if not self._keyboard_active() and label in label_map:
             self._maze_desired_dir = label_map[label]
 
         # Movement tick
@@ -1677,7 +1697,10 @@ class App(tk.Tk):
                 f"solved: {self._maze_count}")
 
         # Update label indicator
-        if label in label_map:
+        if self._keyboard_active():
+            self._maze_label_text.set_text(self._maze_desired_dir)
+            self._maze_label_text.set_color("#f9e2af")
+        elif label in label_map:
             self._maze_label_text.set_text(label_map[label])
             self._maze_label_text.set_color("#a6e3a1")
         else:
@@ -1791,13 +1814,13 @@ class App(tk.Tk):
 
         # Arrow key bindings (bind_all so they work even when canvas has focus)
         self.bind_all("<Up>",
-                      lambda e: setattr(self, '_world_desired_dir', 'up'))
+                      lambda e: self._key_set_dir('_world_desired_dir', 'up'))
         self.bind_all("<Down>",
-                      lambda e: setattr(self, '_world_desired_dir', 'down'))
+                      lambda e: self._key_set_dir('_world_desired_dir', 'down'))
         self.bind_all("<Left>",
-                      lambda e: setattr(self, '_world_desired_dir', 'left'))
+                      lambda e: self._key_set_dir('_world_desired_dir', 'left'))
         self.bind_all("<Right>",
-                      lambda e: setattr(self, '_world_desired_dir', 'right'))
+                      lambda e: self._key_set_dir('_world_desired_dir', 'right'))
 
     def _world_get_viewport(self):
         """Extract the visible viewport as an RGB array."""
@@ -1817,12 +1840,13 @@ class App(tk.Tk):
             "left": (0, -1), "right": (0, 1),
         }
 
+        # Map classifier labels to directions (keyboard takes priority)
         label = self._clf_stable_label
         label_map = {
             "left": "left", "right": "right",
             "top": "up", "bottom": "down",
         }
-        if label in label_map:
+        if not self._keyboard_active() and label in label_map:
             self._world_desired_dir = label_map[label]
 
         moved = False
@@ -1852,7 +1876,11 @@ class App(tk.Tk):
                 f"({self._world_c}, {self._world_r})")
 
         # Label indicator
-        if label in label_map:
+        # Update label indicator
+        if self._keyboard_active():
+            self._world_label_text.set_text(self._world_desired_dir)
+            self._world_label_text.set_color("#f9e2af")
+        elif label in label_map:
             self._world_label_text.set_text(label_map[label])
             self._world_label_text.set_color("#a6e3a1")
         else:
@@ -1864,6 +1892,7 @@ class App(tk.Tk):
     SMOOTH = 0.3  # 0 = no smoothing, 1 = frozen
 
     def _update_plot(self):
+        self._frame_counter += 1
         samples = self.mic.get_snapshot()
 
         if samples is not None:
